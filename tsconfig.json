@@ -12,7 +12,24 @@
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "ES2022",
-    "module": "preserve"
+    "module": "preserve",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@spartan-ng/helm/button": ["./src/shared/ui/helm/button/src/index.ts"],
+      "@spartan-ng/helm/utils": ["./src/shared/ui/helm/utils/src/index.ts"],
+      "@spartan-ng/helm/dialog": ["./src/shared/ui/helm/dialog/src/index.ts"],
+      "@spartan-ng/helm/sheet": ["./src/shared/ui/helm/sheet/src/index.ts"],
+      "@spartan-ng/helm/card": ["./src/shared/ui/helm/card/src/index.ts"],
+      "@spartan-ng/helm/input": ["./src/shared/ui/helm/input/src/index.ts"],
+      "@spartan-ng/helm/label": ["./src/shared/ui/helm/label/src/index.ts"],
+      "@spartan-ng/helm/badge": ["./src/shared/ui/helm/badge/src/index.ts"],
+      "@spartan-ng/helm/avatar": ["./src/shared/ui/helm/avatar/src/index.ts"],
+      "@spartan-ng/helm/skeleton": ["./src/shared/ui/helm/skeleton/src/index.ts"],
+      "@spartan-ng/helm/spinner": ["./src/shared/ui/helm/spinner/src/index.ts"],
+      "@spartan-ng/helm/sonner": ["./src/shared/ui/helm/sonner/src/index.ts"],
+      "@spartan-ng/helm/separator": ["./src/shared/ui/helm/separator/src/index.ts"],
+      "@spartan-ng/helm/tabs": ["./src/shared/ui/helm/tabs/src/index.ts"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

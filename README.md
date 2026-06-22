@@ -4,6 +4,8 @@ Angular 22에서 **SSR · CSR · SSG를 한 도메인에서 우아하게 혼합*
 도메인은 영화 카탈로그(가제 CineCat)이며, 데스크톱 모달 ↔ 모바일 바텀시트 적응형 UX,
 URL 동기화 다이얼로그, 무한 스크롤, 쿠키 인증을 SSR과 함께 다룹니다.
 
+> 이 레포는 [`ssr-csr-rendering-strategy`](skills/ssr-csr-rendering-strategy/SKILL.md) 스킬의
+> **참조 구현**입니다(방법론은 프레임워크 비종속, 예제는 Angular).
 > 기획·설계 문서: [`docs/기획/`](docs/기획/) · [`docs/설계/`](docs/설계/) (ADR 0001~0008)
 
 ## 아키텍처

@@ -1,5 +1,6 @@
 export { type Movie, type Genre, type WishlistItem, type Rating } from './db';
 export { GENRE_LABELS } from './seed';
+export { API_BASE_URL, baseUrlInterceptor } from './http';
 export { MovieRepository } from './movies';
 export { WishlistRepository } from './wishlist';
 export { RatingRepository, type RatedMovie } from './ratings';

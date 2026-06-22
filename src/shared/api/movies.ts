@@ -1,44 +1,20 @@
-import { Service } from '@angular/core';
-import { db, type Movie } from './db';
-import { liveQuerySignal } from '@/shared/lib';
+import { Service, computed } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import type { Movie } from './db';
 
 /**
- * 영화 저장소.
- * 업무: 카탈로그 읽기를 한 곳에 가둔다. 화면 코드는 Dexie를 모르고 시그널·메서드만 쓴다.
- * 영화는 읽기 전용 목 데이터라 쓰기 메서드는 두지 않는다.
+ * 영화 저장소 (ADR-0005).
+ * 업무: 파라미터 없는 전역 목록(전체·추천)을 httpResource로 보유해 반응형 시그널로 노출한다.
+ * SSR에서 서버가 가져온 데이터는 Transfer State로 브라우저에 전달돼 하이드레이션 중복 호출이 없다.
+ * 파라미터가 있는 조회(장르별·검색·상세)는 각 페이지가 라우트 시그널에 맞춰 httpResource로 직접 만든다.
  */
 @Service()
 export class MovieRepository {
-  /** 전체 목록(최신순). */
-  readonly all = liveQuerySignal<Movie[]>(
-    () => db.movies.orderBy('year').reverse().toArray(),
-    [],
-  );
+  /** 전체 목록(최신순). 백엔드가 정렬해 내려준다. */
+  private readonly allRes = httpResource<{ items: Movie[]; total: number }>(() => '/api/movies');
+  readonly all = computed(() => this.allRes.value()?.items ?? []);
 
-  /** 홈 추천(featured) 목록. featured는 비인덱스라 메모리 필터로 거른다. */
-  readonly featured = liveQuerySignal<Movie[]>(
-    () => db.movies.filter((m) => m.featured).toArray(),
-    [],
-  );
-
-  get(id: string): Promise<Movie | undefined> {
-    return db.movies.get(id);
-  }
-
-  /** 장르 키로 거른 목록. */
-  byGenre(key: string): Promise<Movie[]> {
-    return db.movies.where('genres').equals(key).toArray();
-  }
-
-  /** 제목·원제 부분 일치 검색(목 데이터 규모라 클라이언트 필터로 충분). */
-  async search(query: string): Promise<Movie[]> {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    const all = await db.movies.toArray();
-    return all.filter(
-      (m) =>
-        m.title.toLowerCase().includes(q) ||
-        (m.originalTitle?.toLowerCase().includes(q) ?? false),
-    );
-  }
+  /** 홈 추천(featured) 목록. */
+  private readonly featuredRes = httpResource<Movie[]>(() => '/api/movies/featured');
+  readonly featured = computed(() => this.featuredRes.value() ?? []);
 }

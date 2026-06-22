@@ -3,12 +3,14 @@ import {
   DestroyRef,
   ElementRef,
   OnDestroy,
+  PLATFORM_ID,
   computed,
   effect,
   inject,
   signal,
   viewChild,
 } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { GENRE_LABELS, MovieRepository, type Movie } from '@/shared/api';
 import { BreakpointService } from '@/shared/lib';
@@ -146,11 +148,13 @@ export default class Home implements OnDestroy {
     });
 
     // 센티넬이 (재)생성될 때마다 IntersectionObserver를 다시 연결한다.
+    // SSR 가드(ADR-0001): IntersectionObserver는 브라우저 전용이라 서버에서는 만들지 않는다.
+    const isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
     let io: IntersectionObserver | undefined;
     effect(() => {
       const el = this.sentinel()?.nativeElement;
       io?.disconnect();
-      if (!el) return;
+      if (!el || !isBrowser) return;
       io = new IntersectionObserver(
         (entries) => {
           if (entries[0]?.isIntersecting) this.loadMore();

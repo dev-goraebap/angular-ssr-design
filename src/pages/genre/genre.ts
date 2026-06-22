@@ -1,6 +1,7 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
+import { httpResource } from '@angular/common/http';
 import { HlmButton } from '@spartan-ng/helm/button';
-import { GENRE_LABELS, MovieRepository, type Movie } from '@/shared/api';
+import { GENRE_LABELS, type Movie } from '@/shared/api';
 import { NavExitService } from '@/shared/lib';
 import { MovieCard } from '@/entities/movie';
 import { OpenMovieService } from '@/features/open-movie';
@@ -36,19 +37,13 @@ export default class Genre {
   // /genre/:key (withComponentInputBinding)
   readonly key = input.required<string>();
 
-  private readonly repo = inject(MovieRepository);
   private readonly opener = inject(OpenMovieService);
   private readonly navExit = inject(NavExitService);
 
-  protected readonly movies = signal<Movie[]>([]);
+  // key() 시그널에 반응해 자동 재요청한다. SSR에서 채워져 Transfer State로 전달된다(ADR-0005).
+  private readonly moviesRes = httpResource<Movie[]>(() => `/api/genres/${this.key()}/movies`);
+  protected readonly movies = computed(() => this.moviesRes.value() ?? []);
   protected readonly label = computed(() => GENRE_LABELS[this.key()] ?? this.key());
-
-  constructor() {
-    effect(() => {
-      const key = this.key();
-      void this.repo.byGenre(key).then((ms) => this.movies.set(ms));
-    });
-  }
 
   protected open(movie: Movie): void {
     this.opener.open(movie.id);

@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { BreakpointService } from '@/shared/lib';
-import { MovieRepository, type Movie } from '@/shared/api';
+import { type Movie } from '@/shared/api';
 import { OpenMovieService } from '@/features/open-movie';
 
 /**
@@ -64,17 +65,21 @@ import { OpenMovieService } from '@/features/open-movie';
 })
 export class SearchBox {
   protected readonly bp = inject(BreakpointService);
-  private readonly repo = inject(MovieRepository);
   private readonly opener = inject(OpenMovieService);
   private readonly router = inject(Router);
 
   protected readonly query = signal('');
-  protected readonly results = signal<Movie[]>([]);
   protected readonly focused = signal(false);
 
-  protected async onInput(value: string): Promise<void> {
+  // query()에 반응해 자동완성 결과를 가져온다(상위 6개).
+  private readonly resultsRes = httpResource<Movie[]>(() => {
+    const q = this.query().trim();
+    return q ? `/api/search?q=${encodeURIComponent(q)}` : undefined;
+  });
+  protected readonly results = computed(() => (this.resultsRes.value() ?? []).slice(0, 6));
+
+  protected onInput(value: string): void {
     this.query.set(value);
-    this.results.set(value.trim() ? (await this.repo.search(value)).slice(0, 6) : []);
   }
 
   protected submit(): void {

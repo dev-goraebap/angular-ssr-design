@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -6,7 +7,6 @@ import { HlmBadge } from '@spartan-ng/helm/badge';
 import { AuthService } from '@/shared/auth';
 import {
   GENRE_LABELS,
-  MovieRepository,
   RatingRepository,
   WishlistRepository,
   type Movie,
@@ -99,7 +99,6 @@ import { RateMovieSheet } from './rate-movie-sheet';
   `,
 })
 export class MovieDetail {
-  private readonly repo = inject(MovieRepository);
   private readonly wishlist = inject(WishlistRepository);
   private readonly rating = inject(RatingRepository);
   protected readonly auth = inject(AuthService);
@@ -111,23 +110,23 @@ export class MovieDetail {
   readonly movieId = input<string>();
   private readonly resolvedId = computed(() => this.movieId() ?? this.ctx?.movieId ?? '');
 
-  readonly movie = signal<Movie | undefined>(undefined);
-  readonly loading = signal(true);
+  // resolvedId()에 반응해 상세를 가져온다. SSR에서 채워져 Transfer State로 전달된다(ADR-0005).
+  private readonly movieRes = httpResource<Movie>(() => {
+    const id = this.resolvedId();
+    return id ? `/api/movies/${id}` : undefined;
+  });
+  readonly movie = computed(() => this.movieRes.value());
+  readonly loading = computed(() => this.movieRes.isLoading());
+
   readonly inWishlist = signal(false);
   readonly myRating = signal(0);
   readonly shareMessage = signal('');
 
   constructor() {
+    // 회원이면 이 영화의 위시리스트/평점 상태를 함께 불러온다(로그인/로그아웃에 반응).
     effect(() => {
       const id = this.resolvedId();
       if (!id) return;
-      this.loading.set(true);
-      void this.repo.get(id).then((m) => {
-        this.movie.set(m);
-        this.loading.set(false);
-      });
-
-      // 회원이면 이 영화의 위시리스트/평점 상태를 함께 불러온다(로그인/로그아웃에 반응).
       const uid = this.auth.userId();
       if (uid) {
         void this.wishlist.has(uid, id).then((v) => this.inWishlist.set(v));

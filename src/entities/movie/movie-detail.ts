@@ -127,10 +127,9 @@ export class MovieDetail {
     effect(() => {
       const id = this.resolvedId();
       if (!id) return;
-      const uid = this.auth.userId();
-      if (uid) {
-        void this.wishlist.has(uid, id).then((v) => this.inWishlist.set(v));
-        void this.rating.get(uid, id).then((r) => this.myRating.set(r?.score ?? 0));
+      if (this.auth.isAuthenticated()) {
+        void this.wishlist.has(id).then((v) => this.inWishlist.set(v));
+        void this.rating.get(id).then((s) => this.myRating.set(s));
       } else {
         this.inWishlist.set(false);
         this.myRating.set(0);
@@ -148,13 +147,12 @@ export class MovieDetail {
   }
 
   protected async toggleWishlist(m: Movie): Promise<void> {
-    const uid = this.auth.userId();
-    if (!uid) return;
+    if (!this.auth.isAuthenticated()) return;
     if (this.inWishlist()) {
-      await this.wishlist.remove(uid, m.id);
+      await this.wishlist.remove(m.id);
       this.inWishlist.set(false);
     } else {
-      await this.wishlist.add(uid, m.id, new Date().toISOString());
+      await this.wishlist.add(m.id);
       this.inWishlist.set(true);
     }
   }

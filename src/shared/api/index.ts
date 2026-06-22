@@ -4,4 +4,3 @@ export { API_BASE_URL, baseUrlInterceptor } from './http';
 export { MovieRepository } from './movies';
 export { WishlistRepository } from './wishlist';
 export { RatingRepository, type RatedMovie } from './ratings';
-export { requestPersistentStorage } from './storage';

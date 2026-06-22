@@ -1,14 +1,10 @@
-import {
-  ApplicationConfig,
-  provideAppInitializer,
-  provideBrowserGlobalErrorListeners,
-} from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 
 import { routes } from './app.routes';
-import { requestPersistentStorage, baseUrlInterceptor } from '@/shared/api';
+import { baseUrlInterceptor } from '@/shared/api';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,9 +17,5 @@ export const appConfig: ApplicationConfig = {
     // 하이드레이션 활성화. Angular 22는 provideClientHydration()만으로 증분 하이드레이션이
     // 기본 ON이다(ADR-0002). withEventReplay로 하이드레이션 전 발생한 이벤트를 재생한다.
     provideClientHydration(withEventReplay()),
-    // 시작 시 영속 저장소를 요청한다(브라우저에서만 동작, 실패해도 앱은 계속 뜬다).
-    provideAppInitializer(() => {
-      void requestPersistentStorage();
-    }),
   ],
 };

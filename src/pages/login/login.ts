@@ -65,10 +65,10 @@ export default class Login {
     password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
 
-  protected submit(): void {
+  protected async submit(): Promise<void> {
     if (this.form.invalid) return;
     const { id, password } = this.form.getRawValue();
-    if (this.auth.login(id, password)) {
+    if (await this.auth.login(id, password)) {
       void this.router.navigateByUrl(this.returnUrl() || '/');
     } else {
       this.error.set('아이디 또는 비밀번호가 올바르지 않습니다.');

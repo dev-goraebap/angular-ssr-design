@@ -1,12 +1,12 @@
-import { Component, inject } from '@angular/core';
-import { RatingRepository, type Movie } from '@/shared/api';
-import { AuthService } from '@/shared/auth';
+import { Component, computed, inject } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { type Movie, type RatedMovie } from '@/shared/api';
 import { MovieCard } from '@/entities/movie';
 import { OpenMovieService } from '@/features/open-movie';
 
 /**
  * 내 평점(회원 전용, ADR-0006 가드).
- * 업무: 내가 별점을 남긴 영화와 점수를 보여 준다. 평가/수정/삭제는 자동 반영된다(liveQuery).
+ * 업무: 내가 별점을 남긴 영화와 점수를 보여 준다. 사용자는 쿠키로 식별된다(ADR-0004).
  */
 @Component({
   selector: 'page-my-ratings',
@@ -32,11 +32,10 @@ import { OpenMovieService } from '@/features/open-movie';
   `,
 })
 export default class MyRatings {
-  private readonly auth = inject(AuthService);
-  private readonly rating = inject(RatingRepository);
   private readonly opener = inject(OpenMovieService);
 
-  protected readonly items = this.rating.liveRated(this.auth.userId() ?? '');
+  private readonly itemsRes = httpResource<RatedMovie[]>(() => '/api/ratings');
+  protected readonly items = computed(() => this.itemsRes.value() ?? []);
 
   protected open(movie: Movie): void {
     this.opener.open(movie.id);

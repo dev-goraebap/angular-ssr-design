@@ -138,16 +138,14 @@ export class RateMovieSheet {
   }
 
   protected async save(): Promise<void> {
-    const uid = this.auth.userId();
-    if (!uid || this.score() === 0) return;
-    await this.rating.set(uid, this.data.movieId, this.score(), new Date().toISOString());
+    if (!this.auth.isAuthenticated() || this.score() === 0) return;
+    await this.rating.set(this.data.movieId, this.score());
     this.ref.close(this.score());
   }
 
   protected async remove(): Promise<void> {
-    const uid = this.auth.userId();
-    if (!uid) return;
-    await this.rating.remove(uid, this.data.movieId);
+    if (!this.auth.isAuthenticated()) return;
+    await this.rating.remove(this.data.movieId);
     this.ref.close(0);
   }
 }

@@ -24,6 +24,9 @@ SSR HTTP 클라이언트는 절대 URL을 요구한다(서버엔 "현재 origin"
 // shared/api/http.ts
 export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL', {
   providedIn: 'root', factory: () => '',           // 브라우저 기본: 상대경로
+  // ⚠️ Transfer State origin map을 쓰면 이 기본값을 절대로 바꿔야 한다(클라 캐시 키 일치):
+  //    factory: () => (typeof window !== 'undefined' ? window.location.origin : '')
+  //    → data-fetching-ssr.md 관문 4 참조. 공개 읽기만 SSR이면 ''로 충분.
 });
 export const baseUrlInterceptor: HttpInterceptorFn = (req, next) => {
   const base = inject(API_BASE_URL);

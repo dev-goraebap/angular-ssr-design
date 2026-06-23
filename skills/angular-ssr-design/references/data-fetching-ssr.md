@@ -111,6 +111,11 @@ onProxyRes(proxyRes, reqIn) {
 마커 헤더 + 조건부 strip 패턴을 권장하는 이유: "SSR이 transfer를 원하는 호출"과 "브라우저
 직접 호출"을 응답 측에서 구분할 유일한 신호가 그 마커뿐이기 때문이다.
 
+- 위 예시는 `http-proxy-middleware`(`onProxyRes`) 기준이다. **fetch 기반 커스텀 BFF**면 같은
+  로직을 *응답을 파이핑하기 직전*에 두면 된다(`headers.delete('cache-control')` 등).
+- 마커 `x-ssr-transfer`는 **업스트림(백엔드)으로는 넘기지 않는다** — 프록시에서 요청을 백엔드로
+  보내기 전에 함께 strip한다(기능엔 무해하지만 깔끔하게).
+
 ### 관문 4 — server/client의 캐시 키(absolute URL)가 일치할 것
 
 Transfer State 캐시 키는 **절대 URL**이다. 그런데 [backend-proxy-auth.md](backend-proxy-auth.md)
@@ -126,6 +131,25 @@ client는 public origin(`/api/...` → `https://app.example.com/api/...`)으로 
 
 `HTTP_TRANSFER_CACHE_ORIGIN_MAP`은 **server 전용 토큰**이다(클라엔 주입하지 않는다). 양쪽
 절대 URL을 처음부터 같게 만들 수 있으면 그게 더 단순하다.
+
+> ⚠️ **놓치기 쉬운 짝**: origin map은 server 키만 public 절대 URL로 바꾼다. Angular는 **클라에선
+> origin map을 안 쓰고 `req.url`을 그대로 캐시 키**로 쓰므로([backend-proxy-auth.md](backend-proxy-auth.md)의
+> 브라우저 기본값 `factory: () => ''`를 그대로 두면 클라 키가 `/api/me`(상대)다), 매핑된 server
+> 키(`https://app.example.com/api/me`)와 안 맞아 다시 부른다. **origin map을 켜는 순간 클라
+> baseURL도 절대로** 바꿔야 짝이 맞는다:
+>
+> ```ts
+> // shared/api/http.ts — 브라우저는 현재 origin을 절대 prefix로
+> factory: () => (typeof window !== 'undefined' ? window.location.origin : ''),
+> ```
+>
+> ```
+> server 저장 키 :  https://app.example.com/api/me   (내부 origin → origin map으로 매핑)
+> client 조회 키 :  https://app.example.com/api/me   (baseURL=window.location.origin)  ✅ 일치
+> ```
+>
+> 반대로 **공개 읽기만 SSR로 두는 기본 경로에선 `''`(상대)로 충분**하다 — 관문 4(origin map)를
+> 아예 안 타기 때문. 즉 origin map과 클라 절대 baseURL은 **항상 같이 켜고 같이 끈다.**
 
 ### 관문 5 — 검증: 무음 실패이므로 HTML을 직접 열어 확인한다
 

@@ -96,6 +96,15 @@ SSR에서도 로그인 상태로 렌더해야 하는 페이지가 있을 때만 
   IPv4만 listen하면 연결이 거부될 수 있다 → 내부 호출 타겟을 `127.0.0.1`로 고정하면 안전.
 - **로그인 직후 `Set-Cookie`** 가 프록시를 거쳐 브라우저로 전달되는지 확인(프록시가 쿠키를
   올바르게 패스해야 한다).
+- **쿠키 포워딩 ↔ Transfer State 충돌**: 위 `authForwardInterceptor`가 SSR 요청에 `cookie`
+  헤더를 붙이면, 그 요청은 Angular transfer-cache에서 **자동 제외**된다(`cookie`도 인증
+  헤더로 취급). 공개 읽기에는 SSR 쿠키 포워딩을 걸지 말고, 꼭 필요하면 옵트인/응답 strip을
+  쓴다 → [data-fetching-ssr.md](data-fetching-ssr.md)의 "5가지 관문".
+- **응답 `Cache-Control`이 transfer를 막는다**: 백엔드(특히 Spring Security 기본값)가
+  `no-store|no-cache|private`를 붙이면 요청 측을 다 풀어도 SSR 데이터가 Transfer State에
+  안 실린다. **프록시/BFF가 마침 그 길목**이므로, SSR-내부 호출(마커 헤더로 식별)에 한해
+  응답에서 그 헤더를 벗기는 처리를 프록시에 둔다(브라우저 직접 호출은 보존). 구체 패턴은
+  [data-fetching-ssr.md](data-fetching-ssr.md) 관문 3 참조.
 
 ## 다른 프레임워크 대응
 

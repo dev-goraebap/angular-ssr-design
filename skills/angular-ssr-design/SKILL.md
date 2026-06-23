@@ -1,5 +1,5 @@
 ---
-name: ssr-csr-rendering-strategy
+name: angular-ssr-design
 description: Guidance for mixing SSR, CSR, and SSG (prerender) in one app — choosing a render mode per page, getting data into the SSR HTML with hydration/transfer-state, separating the backend behind a same-origin proxy to avoid CORS, unifying cookie auth across server and client, guarding browser-only APIs, and keeping client interactions (modals, back button) from clashing with SSR. Framework-agnostic method; examples in Angular.
 ---
 
@@ -73,6 +73,10 @@ SSR/CSR 혼합은 "전부 SSR이냐 전부 CSR이냐"의 문제가 아니라, **
   HTML에 실어 보낸다 → 하이드레이션 중복 호출 0.
 - **쓰기(변이)**: 사용자 액션 핸들러에서 명령형 호출.
 - **주의**: 인증/개인화 응답은 Transfer State 캐시에서 제외한다(다른 사용자 데이터 누수).
+- **무음 함정**: "SSR HTML엔 데이터가 있는데 하이드레이션 후 스켈레톤으로 깜빡"하면 Transfer
+  State가 빈 것이다. 이건 에러 없이 조용히 실패하고, 요청 측·**응답 측(`Cache-Control`)**·캐시
+  키까지 관문이 여러 개라 진단이 비싸다 → [references/data-fetching-ssr.md](references/data-fetching-ssr.md)
+  "5가지 관문" 체크리스트를 그대로 돌려라.
 - **Angular**: 읽기 `httpResource`(Angular 22 stable, Transfer State 자동), 쓰기 `HttpClient`,
   `provideHttpClient(withFetch())`. **Next/Nuxt**: 서버 컴포넌트/`useFetch`가 같은 역할.
 
